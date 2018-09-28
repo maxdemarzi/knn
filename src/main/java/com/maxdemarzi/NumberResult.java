@@ -1,9 +1,9 @@
 package com.maxdemarzi;
 
 public class NumberResult {
-    public Integer number;
+    public Number number;
 
-    NumberResult(Integer number) {
+    NumberResult(Number number) {
         this.number = number;
     }
 }

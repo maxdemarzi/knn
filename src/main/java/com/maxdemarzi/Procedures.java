@@ -83,6 +83,45 @@ public class Procedures {
             }
         }
 
+        nextB.clear();
+
+        // Fifth Hop
+        iterator = nextA.iterator();
+        while (iterator.hasNext()) {
+            int nodeId = iterator.next();
+            for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                if (seen.checkedAdd((int)r.getEndNodeId())) {
+                    nextB.add((int)r.getEndNodeId());
+                }
+            }
+        }
+
+        nextA.clear();
+
+        // Sixth Hop
+        iterator = nextB.iterator();
+        while (iterator.hasNext()) {
+            int nodeId = iterator.next();
+            for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                if(seen.checkedAdd((int)r.getEndNodeId())) {
+                    nextA.add((int)r.getEndNodeId());
+                }
+            }
+        }
+
+        nextB.clear();
+
+        // Fifth Hop
+        iterator = nextA.iterator();
+        while (iterator.hasNext()) {
+            int nodeId = iterator.next();
+            for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                if (seen.checkedAdd((int)r.getEndNodeId())) {
+                    nextB.add((int)r.getEndNodeId());
+                }
+            }
+        }
+
         // remove myself
         seen.remove((int) node.getId());
 
