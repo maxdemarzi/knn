@@ -81,6 +81,61 @@ public class Procedures {
     }
 
 
+    @Procedure(name = "com.maxdemarzi.knnx2", mode = Mode.READ)
+    @Description("CALL com.maxdemarzi.knnx2(Node node, Number n)")
+    public Stream<NumberResult> knnx2(@Name("node") Node node, @Name("n") Number n) throws IOException {
+        // Initialize bitmaps for iteration
+        RoaringBitmap seen = new RoaringBitmap();
+        RoaringBitmap nextA = new RoaringBitmap();
+        RoaringBitmap nextB = new RoaringBitmap();
+        seen.add((int) node.getId());
+
+        nextA.add((int) node.getId());
+
+        // First Hop
+        Iterator<Integer> iterator = nextA.iterator();
+        while (iterator.hasNext()) {
+            int nodeId = iterator.next();
+            for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                nextB.add((int) r.getEndNodeId());
+            }
+        }
+
+        for(int i = 1; i < n.intValue(); i++) {
+            // next even Hop
+            nextB.andNot(seen);
+            seen.or(nextB);
+            nextA.clear();
+            iterator = nextB.iterator();
+            while (iterator.hasNext()) {
+                int nodeId = iterator.next();
+                for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                    nextA.add((int) r.getEndNodeId());
+                }
+            }
+
+            i++;
+            if (i < n.intValue()) {
+                // next odd Hop
+                nextA.andNot(seen);
+                seen.or(nextA);
+                nextB.clear();
+                iterator = nextA.iterator();
+                while (iterator.hasNext()) {
+                    int nodeId = iterator.next();
+                    for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
+                        nextB.add((int) r.getEndNodeId());
+                    }
+                }
+            }
+        }
+        seen.or(nextB);
+        // remove myself
+        seen.remove((int) node.getId());
+
+        return  Stream.of(new NumberResult(seen.getCardinality()));
+    }
+
     @Procedure(name = "com.maxdemarzi.knn", mode = Mode.READ)
     @Description("CALL com.maxdemarzi.knn(Node node)")
     public Stream<NumberResult> knn(@Name("node") Node node) throws IOException {

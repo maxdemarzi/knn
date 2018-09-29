@@ -26,3 +26,11 @@ Restart your Neo4j Server. A new Stored Procedure is available:
     MATCH (n) WHERE id(n) = x WITH n 
     CALL com.maxdemarzi.knn(n) YIELD number
     RETURN number
+    
+    MATCH (n) WHERE id(n) = x WITH n 
+    CALL com.maxdemarzi.knnx(n, 7) YIELD number
+    RETURN number
+    
+    MATCH (n) WHERE id(n) = x WITH n 
+    CALL com.maxdemarzi.knnx2(n, 7) YIELD number
+    RETURN number
