@@ -129,6 +129,7 @@ public class Procedures {
                 }
             }
         }
+        seen.or(nextA);
         seen.or(nextB);
         // remove myself
         seen.remove((int) node.getId());
