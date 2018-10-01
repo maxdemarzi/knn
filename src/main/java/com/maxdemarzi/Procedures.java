@@ -24,13 +24,12 @@ public class Procedures {
 
     @Procedure(name = "com.maxdemarzi.knnx", mode = Mode.READ)
     @Description("CALL com.maxdemarzi.knnx(Node node, Number n)")
-    public Stream<NumberResult> knnx(@Name("node") Node node, @Name("n") Number n) throws IOException {
+    public Stream<NumberResult> neighhbors(@Name("node") Node node, @Name("n") Number n) throws IOException {
         // Initialize bitmaps for iteration
         RoaringBitmap seen = new RoaringBitmap();
         RoaringBitmap nextA = new RoaringBitmap();
         RoaringBitmap nextB = new RoaringBitmap();
         seen.add((int) node.getId());
-
         nextA.add((int) node.getId());
 
         // First Hop
@@ -90,15 +89,9 @@ public class Procedures {
         RoaringBitmap nextB = new RoaringBitmap();
         seen.add((int) node.getId());
 
-        nextA.add((int) node.getId());
-
         // First Hop
-        Iterator<Integer> iterator = nextA.iterator();
-        while (iterator.hasNext()) {
-            int nodeId = iterator.next();
-            for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
-                nextB.add((int) r.getEndNodeId());
-            }
+        for (Relationship r : node.getRelationships(Direction.OUTGOING)) {
+            nextB.add((int) r.getEndNodeId());
         }
 
         for(int i = 1; i < n.intValue(); i++) {
@@ -106,9 +99,7 @@ public class Procedures {
             nextB.andNot(seen);
             seen.or(nextB);
             nextA.clear();
-            iterator = nextB.iterator();
-            while (iterator.hasNext()) {
-                int nodeId = iterator.next();
+            for (Integer nodeId : nextB) {
                 for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
                     nextA.add((int) r.getEndNodeId());
                 }
@@ -120,17 +111,19 @@ public class Procedures {
                 nextA.andNot(seen);
                 seen.or(nextA);
                 nextB.clear();
-                iterator = nextA.iterator();
-                while (iterator.hasNext()) {
-                    int nodeId = iterator.next();
+                for (Integer nodeId : nextA) {
                     for (Relationship r : db.getNodeById((long) nodeId).getRelationships(Direction.OUTGOING)) {
                         nextB.add((int) r.getEndNodeId());
                     }
                 }
             }
         }
-        seen.or(nextA);
-        seen.or(nextB);
+
+        if((n.intValue() % 2) == 0) {
+            seen.or(nextA);
+        } else {
+            seen.or(nextB);
+        }
         // remove myself
         seen.remove((int) node.getId());
 
